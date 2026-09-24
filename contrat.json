@@ -1,0 +1,412 @@
+{
+ "reseau": "avalanche-fuji",
+ "chain_id": 43113,
+ "adresse": "0xDe765Ce2c1383069331A37A92571dC5b8fd8F84A",
+ "abi": [
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "_operator",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "nonpayable",
+   "type": "constructor"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": false,
+     "internalType": "address",
+     "name": "ancien",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "address",
+     "name": "nouveau",
+     "type": "address"
+    }
+   ],
+   "name": "OperateurChange",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "riderWallet",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "points",
+     "type": "uint256"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "scoreTotal",
+     "type": "uint256"
+    },
+    {
+     "indexed": false,
+     "internalType": "string",
+     "name": "raison",
+     "type": "string"
+    }
+   ],
+   "name": "PointsAttribues",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "uint256",
+     "name": "sessionId",
+     "type": "uint256"
+    },
+    {
+     "indexed": true,
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "indexed": true,
+     "internalType": "address",
+     "name": "riderWallet",
+     "type": "address"
+    },
+    {
+     "indexed": false,
+     "internalType": "string",
+     "name": "station",
+     "type": "string"
+    },
+    {
+     "indexed": false,
+     "internalType": "string",
+     "name": "balise",
+     "type": "string"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "t",
+     "type": "uint256"
+    }
+   ],
+   "name": "SessionDemarree",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "uint256",
+     "name": "sessionId",
+     "type": "uint256"
+    },
+    {
+     "indexed": true,
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "dureeSecondes",
+     "type": "uint256"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "prixCentimes",
+     "type": "uint256"
+    },
+    {
+     "indexed": false,
+     "internalType": "uint256",
+     "name": "t",
+     "type": "uint256"
+    }
+   ],
+   "name": "SessionTerminee",
+   "type": "event"
+  },
+  {
+   "anonymous": false,
+   "inputs": [
+    {
+     "indexed": true,
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "indexed": false,
+     "internalType": "address",
+     "name": "wallet",
+     "type": "address"
+    }
+   ],
+   "name": "WalletEnregistre",
+   "type": "event"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "address",
+     "name": "riderWallet",
+     "type": "address"
+    },
+    {
+     "internalType": "uint256",
+     "name": "points",
+     "type": "uint256"
+    },
+    {
+     "internalType": "string",
+     "name": "raison",
+     "type": "string"
+    }
+   ],
+   "name": "attribuerPoints",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "address",
+     "name": "nouveau",
+     "type": "address"
+    }
+   ],
+   "name": "changerOperateur",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "uint256",
+     "name": "sessionId",
+     "type": "uint256"
+    },
+    {
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "address",
+     "name": "riderWallet",
+     "type": "address"
+    },
+    {
+     "internalType": "string",
+     "name": "station",
+     "type": "string"
+    },
+    {
+     "internalType": "string",
+     "name": "balise",
+     "type": "string"
+    }
+   ],
+   "name": "demarrerSession",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "address",
+     "name": "wallet",
+     "type": "address"
+    }
+   ],
+   "name": "enregistrerWallet",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "operator",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [],
+   "name": "owner",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "bytes32",
+     "name": "",
+     "type": "bytes32"
+    }
+   ],
+   "name": "score",
+   "outputs": [
+    {
+     "internalType": "uint256",
+     "name": "",
+     "type": "uint256"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "uint256",
+     "name": "",
+     "type": "uint256"
+    }
+   ],
+   "name": "sessions",
+   "outputs": [
+    {
+     "internalType": "bytes32",
+     "name": "riderId",
+     "type": "bytes32"
+    },
+    {
+     "internalType": "address",
+     "name": "riderWallet",
+     "type": "address"
+    },
+    {
+     "internalType": "string",
+     "name": "station",
+     "type": "string"
+    },
+    {
+     "internalType": "string",
+     "name": "balise",
+     "type": "string"
+    },
+    {
+     "internalType": "uint256",
+     "name": "debut",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "fin",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "dureeSecondes",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "prixCentimes",
+     "type": "uint256"
+    },
+    {
+     "internalType": "bool",
+     "name": "terminee",
+     "type": "bool"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "uint256",
+     "name": "sessionId",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "dureeSecondes",
+     "type": "uint256"
+    },
+    {
+     "internalType": "uint256",
+     "name": "prixCentimes",
+     "type": "uint256"
+    }
+   ],
+   "name": "terminerSession",
+   "outputs": [],
+   "stateMutability": "nonpayable",
+   "type": "function"
+  },
+  {
+   "inputs": [
+    {
+     "internalType": "bytes32",
+     "name": "",
+     "type": "bytes32"
+    }
+   ],
+   "name": "walletDe",
+   "outputs": [
+    {
+     "internalType": "address",
+     "name": "",
+     "type": "address"
+    }
+   ],
+   "stateMutability": "view",
+   "type": "function"
+  }
+ ],
+ "deployeur": "0xC9F3B8B0c3aa943905a658823320046f05e0Bd5f"
+}
