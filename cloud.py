@@ -18,6 +18,7 @@ Horloge = le "t" des stations (jamais time.time()).
 import argparse, base64, html, json, math, os, random, secrets, threading, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
+from chaine import chaine
 
 MAISON = {"korko-01": "A", "korko-02": "A", "korko-03": "B",
           "korko-04": "B", "korko-05": "C", "korko-06": "C"}
@@ -173,6 +174,7 @@ def depart(evt):
     if s:
         s["etat"], s["t_depart"] = "en_cours", t
         p["session"] = s["id"]
+        chaine.demarrer_session(s["id"], s["client"], clients[s["client"]].get("wallet"), st, b)
     else:
         alerte(t, f"Sortie non armée : {b} a quitté la station {st} sans session.")
 
@@ -192,6 +194,8 @@ def retour(evt, etrangere):
     s["etat"], s["t_retour"] = "terminee", t
     s["prix"] = min(PRIX_MAX, math.ceil(duree / 60) * PRIX_MINUTE)
     clients[s["client"]]["tubes"] += TUBES_SESSION
+    chaine.terminer_session(s["id"], round(duree), round(s["prix"] * 100))
+    chaine.attribuer_points(s["client"], clients[s["client"]].get("wallet"), TUBES_SESSION, "session terminee")
     sms(s["client"], f"Merci ! {b} rendue. {fmt_duree(duree)} = {s['prix']:.2f} €. Caution libérée. "
                      f"+{TUBES_SESSION} tube (total {clients[s['client']]['tubes']}).")
 
@@ -259,8 +263,11 @@ def tableau_de_bord():
                      for s in reversed(sessions[-15:]))
         al = "".join(f"<li>{e(a)}</li>" for _, a in reversed(alertes[-10:])) or "<li>—</li>"
         sm = "".join(f"<li><b>{e(t)}</b> : {e(x)}</li>" for t, x in reversed(sms_log[-10:])) or "<li>—</li>"
+    ch = (f'<p class=note>Blockchain : <a href="https://testnet.snowtrace.io/address/{chaine.contrat.address}" target=_blank>'
+          f'contrat {chaine.contrat.address} sur Avalanche Fuji ↗</a></p>' if chaine.actif
+          else '<p class=note>Blockchain : désactivée (voir generer_compte.py puis deploy_contrat.py)</p>')
     return f"""<!doctype html><meta charset=utf-8><meta http-equiv=refresh content=2><title>KORKO cloud</title>{CSS}
-<h1>KORKO — exploitant</h1>
+<h1>KORKO — exploitant</h1>{ch}
 <form action=/arme><input name=client value="+33600000000" style="width:40%"> <select name=station><option>A<option>B<option>C</select>
 <button>Armer</button></form>
 <h2>Stations</h2><table><tr><th>Station</th><th>Dernier t</th><th>Planches entendues</th></tr>{st}</table>
@@ -398,6 +405,7 @@ class Api(BaseHTTPRequestHandler):
             with verrou:
                 cle = "privy:" + user_id
                 nouveau_client(cle, nom=nom, wallet=wallet, type="google")
+                chaine.enregistrer_wallet(cle, wallet)
                 print(f"[cloud] connexion Privy {'vérifiée' if u else '(mode démo, non vérifiée)'} : {nom} · wallet {wallet}")
                 return self.json(200, {"jeton": ouvrir_session_web(cle)})
         if chemin == "/api/armer":

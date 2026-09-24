@@ -59,9 +59,33 @@ Stations : A = 192.168.8.100, B = .101, C = .102 (port 8420).
 `SEUIL_HAUT`, `SEUIL_BAS`, `DELAI_DEPART`, `DELAI_RETOUR`, `ALPHA`.
 Règle en une phrase : « partie quand on ne l'entend plus fort depuis 25 s, revenue quand on l'entend fort sans interruption depuis 20 s ; les heures retenues sont celles du dernier/premier signal fort ».
 
+## Blockchain (Avalanche Fuji, testnet)
+
+Les débuts/fins de session et les points de gamification ("tubes") sont aussi enregistrés
+sur la C-Chain d'Avalanche (testnet Fuji) via un petit smart contract (`contracts/KorkoEvents.sol`).
+C'est la seule partie du projet qui sort de "bibliothèque standard seulement" (voir `requirements.txt`).
+
+1. `pip install -r requirements.txt`
+2. `python3 generer_compte.py` — crée un compte opérateur, écrit sa clé privée dans `.env`
+   (jamais commit) et affiche son adresse publique.
+3. Financer cette adresse en AVAX de testnet : https://core.app/tools/testnet-faucet/
+4. `python3 deploy_contrat.py` — compile et déploie le contrat, écrit `contrat.json`
+   (adresse + ABI, pas secret, peut être commit pour que toute l'équipe partage le même contrat).
+5. Relancer `python3 cloud.py` : le tableau exploitant affiche un lien vers le contrat sur
+   Snowtrace, et chaque DEPART/RETOUR/tube gagné devient une transaction (visible dans le
+   terminal du cloud avec son lien `https://testnet.snowtrace.io/tx/...`).
+
+Sans `.env`/`contrat.json`, `cloud.py` fonctionne normalement, juste sans écrire sur la chaîne.
+
+Ce qu'un seul compte "opérateur" fait à la place de chaque usager (il signe et paie le gas
+pour tout le monde) est une simplification : ce n'est pas encore de la vraie abstraction de
+compte (ERC-4337). Le contrat garde une fonction `enregistrerWallet` prête pour le jour où
+chaque usager aura son propre smart wallet.
+
 ## Limites connues (prochaines étapes)
 
 - Pas de vraie mesure des faux départs et faux retours sur des traces : écrire `eval.py`.
 - Pas de détection « toute la station devient sourde » (mode commun).
 - Paiement, caution et SMS sont simulés. Pas de photo ni de barème des tubes.
 - Tableau de bord brut, sans ordres de mission.
+- Un seul compte opérateur signe tout : pas encore d'abstraction de compte par usager (ERC-4337).

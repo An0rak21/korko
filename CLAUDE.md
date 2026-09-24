@@ -6,9 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 KORKO mini is a demo/prototype for a self-service surfboard rental system: beacons on boards emit
 RSSI, stations infer DEPART (board left)/RETOUR (board back)/ETRANGERE (foreign board returned) from
-signal strength, and a cloud service turns those events into billed sessions with a web UI. Pure
-Python 3 standard library only — no dependencies, no build step, no package manager, no tests. The
-codebase and UI text are in French.
+signal strength, and a cloud service turns those events into billed sessions with a web UI. Session
+start/end and gamification points are also mirrored on Avalanche C-Chain (Fuji testnet) via a small
+Solidity contract. Everything except the blockchain piece (`chaine.py`, `deploy_contrat.py`,
+`generer_compte.py`, `requirements.txt`) is pure Python 3 standard library — no dependencies, no
+build step, no package manager, no tests. The codebase and UI text are in French.
 
 ## Running it
 
@@ -37,6 +39,24 @@ client can be connected to the Pi at a time, so stop `sim.py`/`calibre.py`/`diag
 `station.py` against it.
 
 There is no test suite, linter, or build step in this repo.
+
+### Blockchain (optional layer)
+
+`cloud.py` imports a module-level `chaine` object from [chaine.py](chaine.py) that mirrors
+DEPART/RETOUR events and tube/point awards onto Avalanche Fuji (see `demarrer_session`/
+`terminer_session`/`attribuer_points` calls in `depart()`/`retour()` in cloud.py). This needs
+one-time setup and real (testnet) dependencies:
+
+```
+pip install -r requirements.txt
+python3 generer_compte.py     # creates an operator account, private key goes to .env (gitignored)
+# fund that address at https://core.app/tools/testnet-faucet/
+python3 deploy_contrat.py     # compiles contracts/KorkoEvents.sol, writes contrat.json (address+ABI)
+```
+
+If `.env` (needs `OPERATOR_PRIVATE_KEY`) or `contrat.json` is missing, `Chaine.__init__` just prints
+a message and leaves `chaine.actif = False` — `cloud.py` runs exactly as before, no blockchain calls
+attempted. Never commit `.env`; `contrat.json` is safe to commit (address + public ABI only).
 
 ## Architecture
 
@@ -72,6 +92,19 @@ state:
   Serves three UIs from the same process: `/` (auto-refreshing operator dashboard, server-rendered
   HTML), `/m` (single-page mobile "arm a board" flow opened via QR code), and `/app` (serves
   [app.html](app.html), a client-rendered SPA polling the JSON `Api` endpoints under `/api/...`).
+
+- **chaine.py** / **contracts/KorkoEvents.sol** — the blockchain mirror. `KorkoEvents.sol` is a
+  simple contract restricted to one `operator` address (access control via `onlyOperator`): it
+  records session start/end (`demarrerSession`/`terminerSession`, keyed by cloud.py's plain integer
+  `session["id"]`) and a per-rider on-chain `score` mapping fed by `attribuerPoints` (mirrors the
+  existing `tubes` counter). Riders are identified by `riderId = keccak256(cle_client)` (the same
+  string key cloud.py already uses — a phone number or `"privy:did:..."`) rather than requiring a
+  wallet, since phone-only demo accounts don't have one; `enregistrerWallet` is the seam left for
+  linking a real per-rider smart-account wallet later (true ERC-4337 account abstraction is out of
+  scope here — right now one operator EOA relays and pays gas for every user, by design, not a bug
+  to fix casually). `chaine.py`'s `Chaine` class queues calls and sends them from a background
+  thread with retry, mirroring `station.py`'s persistent-queue pattern, so a slow/unavailable RPC
+  never blocks an HTTP request in `cloud.py`.
 
 - **app.html** — the rider-facing SPA served at `/app`. Vanilla JS, polls `/api/stations` and
   `/api/moi` every 1.5s (`rafraichir()`) and re-renders from scratch (`afficher()`); the auth token

@@ -1,0 +1,7 @@
+# Seule partie du projet a sortir de "bibliotheque standard seulement" :
+# l'enregistrement sur Avalanche C-Chain a besoin de signer des transactions (ECDSA)
+# et de compiler du Solidity, ce que la stdlib ne fait pas. Tout le reste (sim.py,
+# station.py, cloud.py sans chaine.py) continue de tourner sans rien installer.
+web3>=8.0
+eth-account>=0.14
+py-solc-x>=2.0
