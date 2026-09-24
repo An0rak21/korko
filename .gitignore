@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+cloud_etat.json
+file_station_*.ndjson
+calibration.csv
+.env

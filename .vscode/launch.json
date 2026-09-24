@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "1 · Simulateur",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/sim.py",
+      "args": ["--station", "A"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "2 · Cloud",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/cloud.py",
+      "args": ["--reset"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "2 · Cloud + Privy",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/cloud.py",
+      "args": ["--reset", "--privy-app-id", "${input:privyAppId}"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "3 · Station A (simulateur)",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/station.py",
+      "args": ["--station", "A"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "3 · Station A (vrai Pi)",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/station.py",
+      "args": ["--station", "A", "--source", "192.168.8.100:8420", "--verbose"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "Diagnostic Pi A",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/diag.py",
+      "args": ["--source", "192.168.8.100:8420"],
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "KORKO · tout lancer (simulateur)",
+      "configurations": ["1 · Simulateur", "2 · Cloud", "3 · Station A (simulateur)"],
+      "stopAll": true
+    },
+    {
+      "name": "KORKO · tout lancer (vrai Pi A)",
+      "configurations": ["2 · Cloud", "3 · Station A (vrai Pi)"],
+      "stopAll": true
+    }
+  ],
+  "inputs": [
+    { "id": "privyAppId", "type": "promptString", "description": "Privy App ID" }
+  ]
+}
