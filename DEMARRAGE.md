@@ -4,13 +4,19 @@ Python 3, bibliothèque standard seulement (sauf la partie blockchain, voir plus
 Un terminal par commande.
 
 ```
-python3 lancer_sim.py --page 8099     # simulateur du kit : flux :8420, page de contrôle :8099
+python3 korko_sim.py                  # simulateur du kit : flux :8420, page de contrôle :8080
 python3 mon_cloud.py                  # cloud : http://localhost:9000
 python3 ma_station.py --source localhost:8420
 ```
 
-`--page 8099` parce que le port 8080 attendu par le simulateur est souvent déjà pris
-(IPFS Desktop, Jenkins, Tomcat…). Si le tien est libre, `python3 korko_sim.py` suffit.
+Si le port 8080 est déjà pris chez toi — IPFS Desktop, Jenkins, Tomcat s'y installent
+volontiers — le simulateur ne le dit pas : sa page de contrôle est simplement injoignable et
+c'est l'autre programme qui répond à sa place. Dans ce cas :
+
+```
+python3 lancer_sim.py --page 8099
+python3 mon_cloud.py --sim http://localhost:8099
+```
 
 ## Nos fichiers, et ceux du kit
 

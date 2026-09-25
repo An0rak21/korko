@@ -27,13 +27,15 @@ pristine version at any time: `korko.py`, `korko_sim.py`, `korko_test.py`, `stat
 Three terminals:
 
 ```
-python3 lancer_sim.py --page 8099          # kit simulator: stream :8420, control page :8099
+python3 korko_sim.py                       # kit simulator: stream :8420, control page :8080
 python3 mon_cloud.py                       # cloud: http://localhost:9000
 python3 ma_station.py --source localhost:8420
 ```
 
-`--page 8099` because port 8080 (the kit's hardcoded control-page port) is commonly taken —
-IPFS Desktop holds it on this machine. When 8080 is free, plain `python3 korko_sim.py` works.
+If port 8080 is occupied (IPFS Desktop, Jenkins, Tomcat), the simulator does not say so — its
+control page is simply unreachable and the other program answers in its place, which shows up
+as a confusing 404 from the cloud's `/api/sim` proxy. Then use
+`python3 lancer_sim.py --page 8099` plus `python3 mon_cloud.py --sim http://localhost:8099`.
 The stream port 8420 is **not** relocatable from outside: `Diffuseur.__init__(self, port=PORT_FLUX)`
 captures it as a default argument at def time, so reassigning the module constant has no effect.
 
