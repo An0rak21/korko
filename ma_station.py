@@ -47,8 +47,9 @@ FENETRE = 12.0          # s : largeur de la médiane glissante
 PROCHE = -78            # dBm : au-dessus, la planche est au râtelier
 LOIN = -84              # dBm : en dessous, elle n'y est pas (zone morte entre les deux)
 CONFIRME = 8.0          # s de signal fort continu avant d'annoncer un retour
-PILE = -80              # derniers paquets plus forts que ça avant le silence : c'est la pile
-DERNIERS = 5            # nombre de paquets regardés pour ce diagnostic
+PILE = -80              # derniers paquets plus forts que ça avant le silence : suspect
+ECART_SUSPECT = 4.0     # s : au-delà, la balise n'émettait déjà plus normalement
+DERNIERS = 5            # nombre de paquets regardés pour ces diagnostics
 
 # SILENCE_DEPART tient compte des deux silences légitimes : une balise
 # mourante n'émet plus que toutes les 6 s, et --chaos coupe le réseau
@@ -60,6 +61,7 @@ class Planche:
     def __init__(self):
         self.fenetre = deque()                  # (t, rssi) des FENETRE dernières secondes
         self.derniers = deque(maxlen=DERNIERS)  # derniers rssi reçus, pour juger la pile
+        self.ecarts = deque(maxlen=20)          # écarts entre paquets : la cadence d'émission
         self.vue = None                         # t du dernier paquet reçu
         self.presente = None                    # None = jamais entendue
         self.forte_depuis = None                # début de la série continue au-dessus de PROCHE
@@ -90,6 +92,8 @@ class MaStation(Detecteur):
         p = self.planches.setdefault(o.balise, Planche())
         p.fenetre.append((o.t, o.rssi))
         p.derniers.append(o.rssi)
+        if p.vue is not None:
+            p.ecarts.append(o.t - p.vue)
         p.vue = o.t
         p.pile_signalee = False                  # elle réémet : sa pile va bien
 
@@ -129,13 +133,20 @@ class MaStation(Detecteur):
                 continue
 
             forte_avant = statistics.median(p.derniers) if p.derniers else None
-            if forte_avant is not None and forte_avant > PILE:
-                # Elle s'est taue d'un coup en plein signal fort : personne ne
-                # l'a emportée, c'est la balise qui ne répond plus.
+            ecart = statistics.median(p.ecarts) if p.ecarts else None
+            if (forte_avant is not None and forte_avant > PILE
+                    and ecart is not None and ecart > ECART_SUSPECT):
+                # Encore forte ET déjà ralentie : une pile qui s'épuise émet de
+                # plus en plus espacé avant de se taire. Une planche qu'on
+                # emporte, elle, émettait normalement jusqu'au bout — et sur du
+                # vrai matériel le signal tombe d'un coup, à pleine puissance,
+                # quand la personne tourne un coin. Le niveau seul ne suffit
+                # donc pas à conclure : il faut les deux signes.
                 if not p.pile_signalee:
                     p.pile_signalee = True
-                    print("ma_station : %s muette au râtelier à %.0f dBm — pile ou balise HS, "
-                          "ce n'est pas un départ" % (balise, forte_avant), file=sys.stderr)
+                    print("ma_station : %s muette à %.0f dBm après une cadence tombée à %.1f s "
+                          "— pile ou balise HS, ce n'est pas un départ"
+                          % (balise, forte_avant, ecart), file=sys.stderr)
                 continue
 
             p.presente = False
