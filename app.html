@@ -69,8 +69,9 @@ pre{background:#f0f0ee;border:1px solid #e0e0dd;border-radius:4px;padding:8px;ma
       <th>Session</th><th>Commandes simulateur</th></tr></thead>
     <tbody id="planches"></tbody>
   </table>
-  <p class="note">Le simulateur joue la station A. <b>poser</b> (sable) et <b>corps</b>
-    (corps mouillé devant la balise) ne doivent déclencher <b>aucun</b> départ : c'est le piège du défi.
+  <p class="note"><b id="mode">…</b></p>
+  <p class="note">En simulation : <b>poser</b> (sable) et <b>corps</b> (corps mouillé devant la
+    balise) ne doivent déclencher <b>aucun</b> départ — c'est le piège du défi.
     Un départ est confirmé après ~45 s de silence, un retour après ~8 s de signal fort.</p>
 </section>
 
@@ -225,16 +226,24 @@ function afficher() {
 
   $("planches").innerHTML = Object.entries(APP.planches).sort().map(([b, p]) => {
     const cmds = p.origine === "A" ? CMD_A : CMD_AILLEURS;
+    const actions = APP.sim
+      ? cmds.map(a => `<button onclick="commande('${a}','${b}')">${a}</button>`).join("")
+      : `<span class="note">planche réelle — déplace-la à la main</span>`;
     return `<tr><td><b>${b}</b></td><td>${esc(p.origine)}</td><td>${esc(p.statut)}</td>
       <td>${esc(p.ou ?? "—")}</td><td>${p.sorties}</td><td>${p.session ?? "—"}</td>
-      <td>${cmds.map(a => `<button onclick="commande('${a}','${b}')">${a}</button>`).join("")}</td></tr>`;
+      <td>${actions}</td></tr>`;
   }).join("");
+
+  $("mode").textContent = APP.sim
+    ? "simulateur branché — les boutons ci-dessous pilotent des planches simulées"
+    : "pas de simulateur joignable — la station tourne sur du vrai matériel, "
+      + "les planches se déplacent physiquement";
 }
 
 async function rafraichir() {
   try {
     const st = await api("/api/stations");
-    APP.stations = st.stations; APP.planches = st.planches;
+    APP.stations = st.stations; APP.planches = st.planches; APP.sim = !!st.sim;
     $("horloge").textContent = `· t = ${Math.round(st.t)} s · ${st.prix_minute.toFixed(2)} €/min, max ${st.prix_max.toFixed(2)} €`;
     const alertes = (st.alertes || []).slice().reverse()
       .map(([t, txt]) => `!  [${Math.round(t)} s] ${txt}`);

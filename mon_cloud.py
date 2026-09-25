@@ -136,6 +136,27 @@ def alerte(texte):
     note("ALERTE : %s" % texte)
 
 
+_sim_vu = {"t": 0.0, "ok": False}
+
+
+def sim_joignable():
+    """Le simulateur répond-il ? Sondé au plus une fois toutes les 5 s.
+
+    Sert à ne pas proposer des boutons de simulateur quand la station tourne
+    sur du vrai matériel : les planches se déplacent alors à la main.
+    """
+    import time as _t
+    if _t.monotonic() - _sim_vu["t"] < 5.0:
+        return _sim_vu["ok"]
+    _sim_vu["t"] = _t.monotonic()
+    try:
+        urllib.request.urlopen(CONFIG["sim"] + "/", timeout=0.4).read(1)
+        _sim_vu["ok"] = True
+    except OSError:
+        _sim_vu["ok"] = False
+    return _sim_vu["ok"]
+
+
 def prix_de(duree):
     return round(min(PRIX_MAX, math.ceil(duree / 60) * TARIF_MIN), 2)
 
@@ -463,7 +484,8 @@ class Cloud(BaseHTTPRequestHandler):
                 return self.json(200, {"stations": res, "planches": planches,
                                        "prix_minute": TARIF_MIN, "prix_max": PRIX_MAX,
                                        "t": horloge, "alertes": alertes[-8:],
-                                       "journal": journal[:12]})
+                                       "journal": journal[:12],
+                                       "sim": sim_joignable()})
 
         if u.path == "/api/moi":
             with verrou:
