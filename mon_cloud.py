@@ -462,7 +462,8 @@ class Cloud(BaseHTTPRequestHandler):
                                 "t": stations.get(n), "libre": libre})
                 return self.json(200, {"stations": res, "planches": planches,
                                        "prix_minute": TARIF_MIN, "prix_max": PRIX_MAX,
-                                       "t": horloge})
+                                       "t": horloge, "alertes": alertes[-8:],
+                                       "journal": journal[:12]})
 
         if u.path == "/api/moi":
             with verrou:

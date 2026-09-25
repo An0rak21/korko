@@ -50,6 +50,11 @@ pre{background:#f0f0ee;border:1px solid #e0e0dd;border-radius:4px;padding:8px;ma
 
 <section>
   <h2>Ma session</h2>
+  <p class="note"><b>L'ordre compte :</b> connecte-toi, arme une session, <i>puis</i> fais
+    <b>partir</b> la planche depuis le panneau Parc. Une planche qui part sans session armée
+    ne produit pas de session — juste une alerte « sortie sans client » ci-dessous.<br>
+    Compte ~70 s avant de voir le départ : le détecteur attend 45 s de silence, et la planche
+    met ~23 s à sortir de portée. C'est ce délai qui évite les faux départs.</p>
   <div id="session"></div>
   <label>Râtelier</label>
   <div id="choixStations"></div>
@@ -70,12 +75,17 @@ pre{background:#f0f0ee;border:1px solid #e0e0dd;border-radius:4px;padding:8px;ma
 </section>
 
 <section>
+  <h2>Ce que voit le cloud <span class="note">(alertes et journal)</span></h2>
+  <pre id="cloud">—</pre>
+</section>
+
+<section>
   <h2>Mes messages (SMS simulés)</h2>
   <pre id="messages">—</pre>
 </section>
 
-<section>
-  <h2>Journal des appels API</h2>
+<section class="plein">
+  <h2>Journal des appels API <span class="note">(côté navigateur)</span></h2>
   <pre id="journal">—</pre>
 </section>
 
@@ -226,6 +236,9 @@ async function rafraichir() {
     const st = await api("/api/stations");
     APP.stations = st.stations; APP.planches = st.planches;
     $("horloge").textContent = `· t = ${Math.round(st.t)} s · ${st.prix_minute.toFixed(2)} €/min, max ${st.prix_max.toFixed(2)} €`;
+    const alertes = (st.alertes || []).slice().reverse()
+      .map(([t, txt]) => `!  [${Math.round(t)} s] ${txt}`);
+    $("cloud").textContent = [...alertes, ...(st.journal || [])].join("\n") || "—";
   } catch {}
   if (APP.jeton) {
     try { APP.moi = await api("/api/moi?jeton=" + encodeURIComponent(APP.jeton)); }
