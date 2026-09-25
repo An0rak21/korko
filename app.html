@@ -3,294 +3,243 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KORKO</title>
+<title>KORKO — page de test</title>
 <style>
-:root{--bg:#EEF2EC;--carte:#fff;--encre:#0B2422;--doux:#56706B;--ligne:#D3DDD6;--teal:#0E5852;--teal-clair:#DCEBE7;
-  --liege:#9C6C28;--signal:#E9A800;--signal-clair:#FBF0CC;--rouge:#A3361C}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--encre);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{background:var(--encre);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
-header h1{margin:0;font-size:20px;letter-spacing:.04em}
-header .tag{font-size:12px;opacity:.7}
-header .droite{margin-left:auto;font-size:13px;opacity:.85;text-align:right}
-main{max-width:980px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+body{font:14px/1.5 system-ui,sans-serif;margin:0;padding:16px;background:#f6f6f4;color:#1b1b1b}
+main{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+section{background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px}
+section.plein{grid-column:1/-1}
+h1{font-size:18px;margin:0 0 12px}
+h2{font-size:14px;margin:0 0 8px;color:#444;text-transform:uppercase;letter-spacing:.04em}
+input{font:inherit;padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:100%;margin:2px 0 6px}
+button{font:inherit;padding:5px 10px;border:1px solid #888;background:#fff;border-radius:4px;cursor:pointer;margin:2px 2px 2px 0}
+button:hover{background:#eee}
+button:disabled{opacity:.4;cursor:default}
+table{width:100%;border-collapse:collapse}
+td,th{text-align:left;padding:4px 6px;border-bottom:1px solid #eee;font-size:13px}
+th{color:#666;font-weight:600}
+pre{background:#f0f0ee;border:1px solid #e0e0dd;border-radius:4px;padding:8px;margin:0;
+    font-size:12px;max-height:220px;overflow:auto;white-space:pre-wrap}
+.ok{color:#186a3b}.ko{color:#a3361c}.note{color:#666;font-size:12px}
 @media (max-width:820px){main{grid-template-columns:1fr}}
-.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:10px;padding:16px}
-.carte h2{margin:0 0 12px;font-size:16px;color:var(--teal)}
-.plein{grid-column:1/-1}
-label{display:block;font-size:13px;color:var(--doux);margin:10px 0 4px}
-input{width:100%;font-size:17px;padding:11px 12px;border:1px solid var(--ligne);border-radius:8px}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--teal);background:#fff;color:var(--teal);padding:9px 14px}
-button.principal{background:var(--teal);color:#fff;width:100%;font-size:18px;padding:14px;margin-top:12px;border:none}
-button.google{width:100%;margin-top:8px;padding:12px;font-size:16px;border-color:var(--ligne);color:var(--encre)}
-button:disabled{opacity:.45;cursor:default}
-.ou{text-align:center;color:var(--doux);font-size:13px;margin:14px 0 4px}
-.note{font-size:13px;color:var(--doux);margin:8px 0 0}
-.erreur{color:var(--rouge);font-size:14px;margin-top:8px;min-height:1em}
-.stations{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-.station{border:1px solid var(--ligne);border-radius:8px;padding:10px;text-align:center;cursor:pointer;background:#fff}
-.station.choisie{border:2px solid var(--teal);background:var(--teal-clair)}
-.station b{display:block;font-size:22px}
-.station span{font-size:12px;color:var(--doux)}
-.etat{border-radius:10px;padding:16px;margin-top:4px}
-.etat.armee{background:var(--signal-clair)}
-.etat.en_cours{background:var(--teal-clair)}
-.etat.terminee{background:#F4F1EA}
-.gros{font-size:34px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
-.moyen{font-size:18px;font-weight:600}
-.profil{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.pastille{display:inline-block;background:var(--teal-clair);color:var(--teal);border-radius:99px;padding:2px 10px;font-size:13px}
-.pastille.liege{background:#F1E4CB;color:var(--liege)}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-ul.messages{list-style:none;margin:0;padding:0;max-height:320px;overflow:auto}
-ul.messages li{background:#F4F7F3;border-radius:10px 10px 10px 2px;padding:9px 12px;margin-bottom:8px;font-size:14px}
-table{width:100%;border-collapse:collapse;font-size:14px}
-td,th{text-align:left;padding:7px 6px;border-bottom:1px solid var(--ligne)}
-th{font-size:12px;color:var(--doux);font-weight:600}
-.pos button{padding:4px 8px;font-size:13px;margin:2px}
-.pos button.actif{background:var(--teal);color:#fff}
-.cache{display:none}
-a{color:var(--teal)}
 </style>
 </head>
 <body>
-<header>
-  <h1>KORKO</h1><span class="tag">planches en liège en libre-service</span>
-  <div class="droite" id="enTete"></div>
-</header>
-
+<h1>KORKO — page de test <span class="note">(UI définitive à brancher plus tard)</span></h1>
 <main>
-  <!-- ============ CONNEXION ============ -->
-  <section class="carte" id="blocConnexion">
-    <h2>Connexion</h2>
-    <div id="etapeTel">
-      <label for="tel">Ton numéro de téléphone</label>
-      <input id="tel" type="tel" inputmode="tel" placeholder="+33 6 12 34 56 78" autocomplete="tel">
-      <button class="principal" id="btnCode">Recevoir un code</button>
-    </div>
-    <div id="etapeCode" class="cache">
-      <label for="code">Code reçu par SMS</label>
-      <input id="code" inputmode="numeric" maxlength="4" placeholder="0000">
-      <p class="note" id="codeDemo"></p>
-      <button class="principal" id="btnValider">Valider</button>
-      <button class="google" id="btnAutreNumero">Changer de numéro</button>
-    </div>
-    <div class="ou">ou</div>
-    <button class="google" id="btnPrivy" disabled>Continuer avec Google</button>
-    <p class="note" id="notePrivy">Chargement de Privy…</p>
-    <p class="erreur" id="erreurConnexion"></p>
-  </section>
 
-  <!-- ============ MON SURF ============ -->
-  <section class="carte cache" id="blocSurf">
-    <div class="profil">
-      <div>
-        <div class="moyen" id="nom"></div>
-        <div class="note" id="wallet"></div>
-      </div>
-      <div><span class="pastille liege" id="tubes"></span> <button id="btnDeconnexion">Déconnexion</button></div>
-    </div>
-    <div id="vueEtat"></div>
-    <p class="erreur" id="erreurSurf"></p>
-  </section>
+<section>
+  <h2>Connexion</h2>
+  <div id="deconnecte">
+    <label>Numéro de téléphone</label>
+    <input id="tel" value="+33612345678">
+    <button id="btnCode">1 · Recevoir un code</button>
+    <label>Code reçu (pré-rempli en démo)</label>
+    <input id="code" placeholder="0000">
+    <button id="btnValider">2 · Valider</button>
+    <p class="note">ou, si le cloud tourne avec --privy-app-id :</p>
+    <button id="btnPrivy" disabled>Continuer avec Google (Privy)</button>
+    <p class="note" id="notePrivy">Privy : chargement…</p>
+  </div>
+  <div id="connecte" hidden>
+    <table id="moi"></table>
+    <button id="btnDeconnexion">Déconnexion</button>
+  </div>
+  <p class="ko" id="erreurConnexion"></p>
+</section>
 
-  <!-- ============ MESSAGES ============ -->
-  <section class="carte cache" id="blocMessages">
-    <h2>Mes messages <span class="note">(SMS simulés)</span></h2>
-    <ul class="messages" id="messages"></ul>
-  </section>
+<section>
+  <h2>Ma session</h2>
+  <div id="session"></div>
+  <label>Râtelier</label>
+  <div id="choixStations"></div>
+  <button id="btnArmer">Armer une session</button>
+  <p class="ko" id="erreurSession"></p>
+</section>
 
-  <!-- ============ HISTORIQUE ============ -->
-  <section class="carte cache" id="blocHistorique">
-    <h2>Mes sessions</h2>
-    <table><thead><tr><th>Planche</th><th>Râtelier</th><th>Durée</th><th>Prix</th><th>État</th></tr></thead>
-    <tbody id="historique"></tbody></table>
-  </section>
+<section class="plein">
+  <h2>Parc <span class="note" id="horloge"></span></h2>
+  <table>
+    <thead><tr><th>Planche</th><th>Base</th><th>Statut</th><th>Où</th><th>Sorties</th>
+      <th>Session</th><th>Commandes simulateur</th></tr></thead>
+    <tbody id="planches"></tbody>
+  </table>
+  <p class="note">Le simulateur joue la station A. <b>poser</b> (sable) et <b>corps</b>
+    (corps mouillé devant la balise) ne doivent déclencher <b>aucun</b> départ : c'est le piège du défi.
+    Un départ est confirmé après ~45 s de silence, un retour après ~8 s de signal fort.</p>
+</section>
 
-  <!-- ============ PANNEAU DÉMO ============ -->
-  <section class="carte plein">
-    <h2>Panneau démo · simulateur <span class="note" id="simInfo"></span></h2>
-    <p class="note">Déplace une planche comme si tu la prenais. Le simulateur joue la station <b id="simStation">?</b>.
-      <b>ici</b> = accrochée · <b>sable</b> = posée à ~1 m · <b>2m</b> = s'éloigne · <b>loin</b> = à l'eau · <b>masque</b> = quelqu'un devant 15 s.
-      Le départ est détecté après ~25 s, le retour après ~20 s.</p>
-    <table><thead><tr><th>Planche</th><th>Maison</th><th>Vue par le cloud</th><th>Position simulée</th></tr></thead>
-    <tbody id="planches"></tbody></table>
-    <p class="note"><a href="/" target="_blank">Tableau de bord exploitant ↗</a></p>
-  </section>
+<section>
+  <h2>Mes messages (SMS simulés)</h2>
+  <pre id="messages">—</pre>
+</section>
+
+<section>
+  <h2>Journal des appels API</h2>
+  <pre id="journal">—</pre>
+</section>
+
+<section class="plein">
+  <h2>API disponible pour l'UI</h2>
+  <pre id="api">GET  /parc                        état brut : horloge, stations, planches, sessions, alertes
+GET  /api/stations                { stations:[{nom,branchee,t,libre}], planches, prix_minute, prix_max, t }
+GET  /api/moi?jeton=…             { cle, nom, type, wallet, tubes, session, historique, messages }
+POST /api/login/tel   {tel}                 -> { code_demo }   (pas de vrai SMS en démo)
+POST /api/login/code  {tel, code}           -> { jeton }
+POST /api/login/privy {user_id, wallet, …}  -> { jeton }
+POST /api/armer       {jeton, station}      -> { session }
+POST /api/deconnexion {jeton}
+POST /api/sim         {action, balise}      relais vers le simulateur du kit
+GET  /arme?client=+336…&station=A           forme texte, compatible kit
+POST /evenements                            les stations poussent ici (contrat du kit)
+
+session = { id, client, station, balise, etat, t_arme, t_depart, t_retour, prix, duree, prix_courant }
+etat    = armee | en_cours | terminee | expiree | perdue</pre>
+</section>
+
 </main>
 
 <div id="racinePrivy"></div>
 
 <script>
-// ---------------- état local ----------------
-const APP = { jeton: null, station: "A", stations: [], moi: null, prixMinute: 0.2, prixMax: 12 };
+const APP = { jeton: null, station: "A", stations: [], moi: null, planches: {} };
 const $ = (id) => document.getElementById(id);
 const esc = (x) => String(x ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const duree = (s) => { s = Math.max(0, Math.floor(s || 0)); return `${Math.floor(s/60)} min ${String(s%60).padStart(2,"0")} s`; };
-const euros = (x) => (x ?? 0).toFixed(2).replace(".", ",") + " €";
+const euros = (x) => (x ?? 0).toFixed(2) + " €";
 
-function lireJeton() { try { return localStorage.getItem("korko_jeton"); } catch { return null; } }
-function ecrireJeton(j) { try { j ? localStorage.setItem("korko_jeton", j) : localStorage.removeItem("korko_jeton"); } catch {} }
+const lignes = [];
+function tracer(texte, ok = true) {
+  lignes.unshift(`${new Date().toLocaleTimeString()} ${ok ? "ok " : "ERR"} ${texte}`);
+  $("journal").textContent = lignes.slice(0, 40).join("\n") || "—";
+}
 
 async function api(chemin, corps) {
   const r = await fetch(chemin, corps === undefined ? {} :
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corps) });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw Object.assign(new Error(data.erreur || `Erreur ${r.status}`), { status: r.status });
+  if (!r.ok) { tracer(`${chemin} → ${r.status} ${data.erreur || ""}`, false);
+               throw Object.assign(new Error(data.erreur || `Erreur ${r.status}`), { status: r.status }); }
+  tracer(`${chemin}${corps ? " " + JSON.stringify(corps) : ""}`);
   return data;
 }
 
-// ---------------- connexion téléphone ----------------
+function lireJeton() { try { return localStorage.getItem("korko_jeton"); } catch { return null; } }
+function ecrireJeton(j) { try { j ? localStorage.setItem("korko_jeton", j) : localStorage.removeItem("korko_jeton"); } catch {} }
+
+// ---------------- connexion ----------------
 $("btnCode").onclick = async () => {
   $("erreurConnexion").textContent = "";
-  try {
-    const r = await api("/api/login/tel", { tel: $("tel").value });
-    $("etapeTel").classList.add("cache"); $("etapeCode").classList.remove("cache");
-    $("code").value = r.code_demo;                       // démo : pas de vrai SMS, on pré-remplit
-    $("codeDemo").textContent = `Démo : pas de vrai SMS, le code (${r.code_demo}) est aussi dans le terminal du cloud.`;
-    $("code").focus();
-  } catch (e) { $("erreurConnexion").textContent = e.message; }
+  try { const r = await api("/api/login/tel", { tel: $("tel").value });
+        $("code").value = r.code_demo; }
+  catch (e) { $("erreurConnexion").textContent = e.message; }
 };
 $("btnValider").onclick = async () => {
   $("erreurConnexion").textContent = "";
-  try {
-    const r = await api("/api/login/code", { tel: $("tel").value, code: $("code").value });
-    connecte(r.jeton);
-  } catch (e) { $("erreurConnexion").textContent = e.message; }
+  try { const r = await api("/api/login/code", { tel: $("tel").value, code: $("code").value });
+        APP.jeton = r.jeton; ecrireJeton(r.jeton); rafraichir(); }
+  catch (e) { $("erreurConnexion").textContent = e.message; }
 };
-$("btnAutreNumero").onclick = () => { $("etapeCode").classList.add("cache"); $("etapeTel").classList.remove("cache"); };
-$("tel").addEventListener("keydown", e => e.key === "Enter" && $("btnCode").click());
-$("code").addEventListener("keydown", e => e.key === "Enter" && $("btnValider").click());
+$("btnDeconnexion").onclick = async () => {
+  await api("/api/deconnexion", { jeton: APP.jeton }).catch(() => {});
+  if (APP.moi?.type === "google") await window.korkoPrivy?.logout?.();
+  APP.jeton = null; APP.moi = null; ecrireJeton(null); rafraichir();
+};
+$("btnPrivy").onclick = () => window.korkoPrivy?.login();
 
-// ---------------- connexion Privy (appelée par le module plus bas) ----------------
-let dernierEnvoiPrivy = "";
+let dernierPrivy = "";
 window.korkoConnexionPrivy = async (user, getAccessToken) => {
   const wallet = user.wallet?.address || null;
   const cle = user.id + "|" + wallet;
-  if (APP.jeton && cle === dernierEnvoiPrivy) return;   // déjà envoyé (le wallet peut arriver après coup)
-  dernierEnvoiPrivy = cle;
+  if (APP.jeton && cle === dernierPrivy) return;
+  dernierPrivy = cle;
   try {
     const r = await api("/api/login/privy", {
       user_id: user.id, wallet,
       email: user.google?.email || user.email?.address || null,
       tel: user.phone?.number || null,
-      access_token: await getAccessToken().catch(() => null),
-    });
-    connecte(r.jeton);
+      access_token: await getAccessToken().catch(() => null) });
+    APP.jeton = r.jeton; ecrireJeton(r.jeton); rafraichir();
   } catch (e) { $("erreurConnexion").textContent = e.message; }
 };
-$("btnPrivy").onclick = () => window.korkoPrivy?.login();
 
-function connecte(jeton) { APP.jeton = jeton; ecrireJeton(jeton); rafraichir(); }
-
-$("btnDeconnexion").onclick = async () => {
-  await api("/api/deconnexion", { jeton: APP.jeton }).catch(() => {});
-  if (APP.moi?.type === "google") await window.korkoPrivy?.logout?.();
-  APP.jeton = null; APP.moi = null; ecrireJeton(null); dernierEnvoiPrivy = "";
-  afficher();
+// ---------------- session ----------------
+window.choisirStation = (n) => { APP.station = n; afficher(); };
+$("btnArmer").onclick = async () => {
+  $("erreurSession").textContent = "";
+  try { await api("/api/armer", { jeton: APP.jeton, station: APP.station }); rafraichir(); }
+  catch (e) { $("erreurSession").textContent = e.message; }
 };
 
-// ---------------- armer ----------------
-async function armer() {
-  $("erreurSurf").textContent = "";
-  try { await api("/api/armer", { jeton: APP.jeton, station: APP.station }); rafraichir(); }
-  catch (e) { $("erreurSurf").textContent = e.message; }
-}
-window.choisirStation = (n) => { APP.station = n; afficher(); };
+// ---------------- simulateur ----------------
+const CMD_A = ["partir", "revenir", "poser", "ranger", "corps", "envers", "mourante", "tuer"];
+const CMD_AILLEURS = ["arrive", "sen_va"];
+window.commande = async (action, balise) => {
+  try { await api("/api/sim", { action, balise }); } catch {}
+};
 
 // ---------------- rendu ----------------
-function vueEtat() {
-  const s = APP.moi?.session;
-  if (s && s.etat === "armee") return `
-    <div class="etat armee">
-      <div class="note">Réservée pour toi au râtelier ${esc(s.station)}</div>
-      <div class="gros">${esc(s.balise)}</div>
-      <p>Prends cette planche. Le compteur démarre tout seul quand tu t'éloignes. Rien à confirmer.</p>
-    </div>`;
-  if (s && s.etat === "en_cours") return `
-    <div class="etat en_cours">
-      <div class="note">Tu surfes avec la ${esc(s.balise)}</div>
-      <div class="gros">${duree(s.duree)}</div>
-      <div class="moyen">${euros(s.prix_courant)} <span class="note">· ${euros(APP.prixMinute)}/min, max ${euros(APP.prixMax)}</span></div>
-      <p>Raccroche-la au râtelier ${esc(s.station)} quand tu as fini : le compteur s'arrête tout seul.</p>
-    </div>`;
-  const stationsHtml = APP.stations.map(st => `
-    <div class="station ${st.nom === APP.station ? "choisie" : ""}" onclick="choisirStation('${st.nom}')">
-      <b>${st.nom}</b><span>${st.branchee ? st.libres + " libre" + (st.libres > 1 ? "s" : "") : "hors ligne"}</span>
-    </div>`).join("");
-  const recu = s && s.etat === "terminee" ? `
-    <div class="etat terminee" style="margin-bottom:14px">
-      <div class="note">Dernière session · ${esc(s.balise)}</div>
-      <div class="moyen">${duree(s.duree)} · ${euros(s.prix)}</div>
-      <div class="note">Caution libérée · +1 tube</div>
-    </div>` : "";
-  const st = APP.stations.find(x => x.nom === APP.station);
-  return `${recu}
-    <label>Choisis ton râtelier</label>
-    <div class="stations">${stationsHtml}</div>
-    <button class="principal" onclick="armer()" ${st && st.branchee && st.libres ? "" : "disabled"}>Je veux surfer</button>
-    <p class="note">${euros(APP.prixMinute)} la minute, ${euros(APP.prixMax)} maximum. Caution de 300 € pré-autorisée, jamais débitée si tu rends la planche.</p>`;
-}
-
 function afficher() {
-  const connecteOk = !!APP.moi;
-  $("blocConnexion").classList.toggle("cache", connecteOk);
-  for (const id of ["blocSurf", "blocMessages", "blocHistorique"]) $(id).classList.toggle("cache", !connecteOk);
-  $("enTete").textContent = connecteOk ? APP.moi.nom : "";
-  if (!connecteOk) return;
-  const m = APP.moi;
-  $("nom").textContent = m.nom;
-  $("wallet").innerHTML = m.wallet
-    ? `Wallet Avalanche <span class="mono">${esc(m.wallet.slice(0, 6))}…${esc(m.wallet.slice(-4))}</span>`
-    : (m.type === "google" ? "Wallet en cours de création…" : "Compte téléphone");
-  $("tubes").textContent = `${m.tubes} tube${m.tubes > 1 ? "s" : ""}`;
-  $("vueEtat").innerHTML = vueEtat();
-  $("messages").innerHTML = m.messages.map(x => `<li>${esc(x)}</li>`).join("") || `<li class="note">Aucun message.</li>`;
-  $("historique").innerHTML = m.historique.map(s => `<tr><td>${esc(s.balise)}</td><td>${esc(s.station)}</td>
-    <td>${s.duree != null ? duree(s.duree) : "—"}</td><td>${s.prix != null ? euros(s.prix) : (s.prix_courant != null ? euros(s.prix_courant) : "—")}</td>
-    <td>${esc(s.etat)}</td></tr>`).join("") || `<tr><td colspan="5" class="note">Pas encore de session.</td></tr>`;
-}
+  const co = !!APP.moi;
+  $("deconnecte").hidden = co;
+  $("connecte").hidden = !co;
 
-// ---------------- panneau simulateur ----------------
-const POSITIONS = ["ici", "sable", "2m", "loin", "masque"];
-window.bouger = async (b, pos) => { await api("/api/sim/bouge", { b, pos }).catch(e => $("simInfo").textContent = e.message); rafraichirSim(); };
-let planchesCloud = {};
-async function rafraichirSim() {
-  let sim = null;
-  try { sim = await api("/api/sim/etat"); $("simInfo").textContent = `· ${sim.clients} station(s) branchée(s)`; }
-  catch { $("simInfo").textContent = "· simulateur injoignable (lance python3 sim.py)"; }
-  $("simStation").textContent = sim?.station ?? "?";
-  const noms = Object.keys(planchesCloud).length ? Object.keys(planchesCloud) : Object.keys(sim?.positions || {});
-  $("planches").innerHTML = noms.map(b => {
-    const p = planchesCloud[b] || {}, pos = sim?.positions?.[b];
-    return `<tr><td><b>${b}</b></td><td>${esc(p.maison ?? "")}</td>
-      <td>${esc(p.lieu ?? "—")}${p.session ? ` · session ${p.session}` : ""}</td>
-      <td class="pos">${POSITIONS.map(x => `<button class="${x === pos ? "actif" : ""}" onclick="bouger('${b}','${x}')" ${sim ? "" : "disabled"}>${x}</button>`).join("")}</td></tr>`;
+  if (co) {
+    const m = APP.moi;
+    $("moi").innerHTML = `
+      <tr><th>compte</th><td>${esc(m.nom)}</td></tr>
+      <tr><th>clé</th><td>${esc(m.cle)}</td></tr>
+      <tr><th>type</th><td>${esc(m.type)}</td></tr>
+      <tr><th>wallet</th><td>${m.wallet ? esc(m.wallet) : "—"}</td></tr>
+      <tr><th>tubes</th><td>${m.tubes}</td></tr>`;
+    $("messages").textContent = m.messages.length ? m.messages.join("\n") : "—";
+
+    const s = m.session;
+    $("session").innerHTML = !s ? `<p class="note">Aucune session.</p>` :
+      s.etat === "armee" ? `<p>Session <b>armée</b> · prends la planche <b>${esc(s.balise)}</b>
+          au râtelier ${esc(s.station)}. Le compteur démarre quand tu t'éloignes.</p>` :
+      s.etat === "en_cours" ? `<p>Session <b>en cours</b> · ${esc(s.balise)} ·
+          <b>${duree(s.duree)}</b> · ${euros(s.prix_courant)}</p>` :
+      `<p>Dernière session · ${esc(s.balise)} · ${duree(s.duree)} ·
+          <b>${euros(s.prix)}</b> · <span class="ok">${esc(s.etat)}</span></p>`;
+  } else {
+    $("session").innerHTML = `<p class="note">Connecte-toi pour armer une session.</p>`;
+    $("messages").textContent = "—";
+  }
+  $("btnArmer").disabled = !co;
+
+  $("choixStations").innerHTML = APP.stations.map(st =>
+    `<button onclick="choisirStation('${st.nom}')" ${st.nom === APP.station ? 'style="background:#ddd"' : ""}>
+       ${st.nom} · ${st.branchee ? (st.libre ? "libre : " + st.libre : "complet") : "hors ligne"}
+     </button>`).join("");
+
+  $("planches").innerHTML = Object.entries(APP.planches).sort().map(([b, p]) => {
+    const cmds = p.origine === "A" ? CMD_A : CMD_AILLEURS;
+    return `<tr><td><b>${b}</b></td><td>${esc(p.origine)}</td><td>${esc(p.statut)}</td>
+      <td>${esc(p.ou ?? "—")}</td><td>${p.sorties}</td><td>${p.session ?? "—"}</td>
+      <td>${cmds.map(a => `<button onclick="commande('${a}','${b}')">${a}</button>`).join("")}</td></tr>`;
   }).join("");
 }
 
-// ---------------- boucle ----------------
 async function rafraichir() {
   try {
     const st = await api("/api/stations");
-    APP.stations = st.stations; planchesCloud = st.planches;
-    APP.prixMinute = st.prix_minute; APP.prixMax = st.prix_max;
+    APP.stations = st.stations; APP.planches = st.planches;
+    $("horloge").textContent = `· t = ${Math.round(st.t)} s · ${st.prix_minute.toFixed(2)} €/min, max ${st.prix_max.toFixed(2)} €`;
   } catch {}
   if (APP.jeton) {
     try { APP.moi = await api("/api/moi?jeton=" + encodeURIComponent(APP.jeton)); }
     catch (e) { if (e.status === 401) { APP.jeton = null; APP.moi = null; ecrireJeton(null); } }
-  }
+  } else { APP.moi = null; }
   afficher();
-  rafraichirSim();
 }
+
 APP.jeton = lireJeton();
 rafraichir();
-setInterval(rafraichir, 1500);
+setInterval(rafraichir, 2000);
 </script>
 
-<!-- ---------------- Privy (Google + wallet Avalanche) ----------------
-     Actif seulement si le cloud est lancé avec --privy-app-id.
-     Dans le tableau de bord Privy : activer Google, ajouter http://localhost:9001 aux origines autorisées. -->
+<!-- Privy : actif seulement si le cloud est lancé avec --privy-app-id -->
 <script type="module">
 const APP_ID = "__PRIVY_APP_ID__";
 const note = document.getElementById("notePrivy"), btn = document.getElementById("btnPrivy");
@@ -309,7 +258,7 @@ if (!APP_ID) {
       const p = usePrivy();
       React.useEffect(() => {
         window.korkoPrivy = { login: p.login, logout: p.logout };
-        if (p.ready) { btn.disabled = false; note.textContent = "Connexion Google via Privy · un wallet Avalanche (Fuji) est créé automatiquement."; }
+        if (p.ready) { btn.disabled = false; note.textContent = "Privy prêt · un wallet Avalanche Fuji est créé automatiquement."; }
         if (p.ready && p.authenticated && p.user) window.korkoConnexionPrivy(p.user, p.getAccessToken);
       }, [p.ready, p.authenticated, p.user]);
       return null;
@@ -319,7 +268,6 @@ if (!APP_ID) {
         appId: APP_ID,
         config: {
           loginMethods: ["google", "sms"],
-          appearance: { theme: "light", accentColor: "#0E5852" },
           defaultChain: chains.avalancheFuji,
           supportedChains: [chains.avalancheFuji, chains.avalanche],
           embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },

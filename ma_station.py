@@ -31,6 +31,14 @@ from collections import deque
 
 from korko import Detecteur, lancer, planches_de
 
+# La console Windows est en cp1252 : sans ça, un diagnostic accentué fait
+# tomber la station en pleine décision.
+for _flux in (sys.stdout, sys.stderr):
+    try:
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+
 #: mettre KORKO_CLOUD="" désactive l'envoi (utile pour scorer vite)
 CLOUD = os.environ.get("KORKO_CLOUD", "http://localhost:9000/evenements")
 

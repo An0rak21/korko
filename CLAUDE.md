@@ -4,125 +4,136 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-KORKO mini is a demo/prototype for a self-service surfboard rental system: beacons on boards emit
-RSSI, stations infer DEPART (board left)/RETOUR (board back)/ETRANGERE (foreign board returned) from
-signal strength, and a cloud service turns those events into billed sessions with a web UI. Session
-start/end and gamification points are also mirrored on Avalanche C-Chain (Fuji testnet) via a small
-Solidity contract. Everything except the blockchain piece (`chaine.py`, `deploy_contrat.py`,
-`generer_compte.py`, `requirements.txt`) is pure Python 3 standard library — no dependencies, no
-build step, no package manager, no tests. The codebase and UI text are in French.
+A hackathon entry for the KORKO challenge: beacons on surfboards emit BLE advertisements, a
+station infers DEPART / RETOUR / ETRANGERE from the signal, and a cloud turns those into billed
+sessions. Session start/end and gamification points are mirrored on Avalanche C-Chain (Fuji
+testnet). Everything is French — code, comments, docs, UI.
+
+**The organizer ships a kit. Do not modify those files** — the team must be able to restore the
+pristine version at any time: `korko.py`, `korko_sim.py`, `korko_test.py`, `station_exemple.py`,
+`cloud_exemple.py`. Our work lives in separate files alongside them.
+
+| ours | role |
+|---|---|
+| `ma_station.py` | the detector — the actual substance of the entry |
+| `mon_cloud.py` | sessions, pricing, SMS, tubes, accounts, blockchain |
+| `app.html` | throwaway test page served at `/app` (real UI comes from someone else) |
+| `scorer_tout.py` | scoring harness across all scenarios / seeds / chaos |
+| `lancer_sim.py` | runs the kit's simulator with a relocatable control-page port |
+| `chaine.py`, `contracts/`, `deploy_contrat.py`, `generer_compte.py` | Avalanche layer |
 
 ## Running it
 
-Each piece runs in its own terminal (or via the VS Code launch configs in [.vscode/launch.json](.vscode/launch.json),
-which also has a "tout lancer (simulateur)" compound):
+Three terminals:
 
 ```
-python3 sim.py --station A          # fake radio: beacon stream on :8421, control UI on http://localhost:8081
-python3 cloud.py --reset            # backend + web UI: http://localhost:9001
-python3 station.py --station A      # reads the radio stream, decides DEPART/RETOUR/ETRANGERE, pushes to cloud
+python3 lancer_sim.py --page 8099          # kit simulator: stream :8420, control page :8099
+python3 mon_cloud.py                       # cloud: http://localhost:9000
+python3 ma_station.py --source localhost:8420
 ```
 
-Ports (8421/8081/9001) are intentionally offset from the real kit's (8420/8080/9000) so this can run
-alongside it. User-facing app: http://localhost:9001/app. Operator dashboard: http://localhost:9001/.
+`--page 8099` because port 8080 (the kit's hardcoded control-page port) is commonly taken —
+IPFS Desktop holds it on this machine. When 8080 is free, plain `python3 korko_sim.py` works.
+The stream port 8420 is **not** relocatable from outside: `Diffuseur.__init__(self, port=PORT_FLUX)`
+captures it as a default argument at def time, so reassigning the module constant has no effect.
 
-Other entry points:
-- `calibre.py --source host:port --balise korko-01` — interactive tool that records RSSI at several
-  distances and prints suggested `SEUIL_HAUT`/`SEUIL_BAS` values for `station.py`.
-- `diag.py --source host:port` — dumps raw messages from a radio source and summarizes fields/devices
-  seen; use this first when a real Pi's message format is unclear.
-
-Against real hardware (see [DEMARRAGE.md](DEMARRAGE.md) for the full walkthrough), point `station.py`
-at `192.168.8.100:8420` (station A; B/C are `.101`/`.102`) instead of the simulator, add `--verbose` to
-see live signal/state, and use `--alias MAC=korko-0X` if beacons show up as MAC addresses. Only one
-client can be connected to the Pi at a time, so stop `sim.py`/`calibre.py`/`diag.py` before starting
-`station.py` against it.
-
-There is no test suite, linter, or build step in this repo.
-
-### Blockchain (optional layer)
-
-`cloud.py` imports a module-level `chaine` object from [chaine.py](chaine.py) that mirrors
-DEPART/RETOUR events and tube/point awards onto Avalanche Fuji (see `demarrer_session`/
-`terminer_session`/`attribuer_points` calls in `depart()`/`retour()` in cloud.py). This needs
-one-time setup and real (testnet) dependencies:
+Scoring (this is how the challenge is judged):
 
 ```
-pip install -r requirements.txt
-python3 generer_compte.py     # creates an operator account, private key goes to .env (gitignored)
-# fund that address at https://core.app/tools/testnet-faucet/
-python3 deploy_contrat.py     # compiles contracts/KorkoEvents.sol, writes contrat.json (address+ABI)
+python3 scorer_tout.py                     # ours
+python3 scorer_tout.py station_exemple     # the baseline to beat
+python3 scorer_tout.py --graines 1,2,3,4,5 --scenarios sable,corps
 ```
 
-If `.env` (needs `OPERATOR_PRIVATE_KEY`) or `contrat.json` is missing, `Chaine.__init__` just prints
-a message and leaves `chaine.actif = False` — `cloud.py` runs exactly as before, no blockchain calls
-attempted. Never commit `.env`; `contrat.json` is safe to commit (address + public ABI only).
+Set `KORKO_CLOUD=""` to stop the detector POSTing to the cloud — scoring runs are ~50× faster
+without an HTTP round-trip per tic. `scorer_tout.py` runs in-process, no ports needed.
 
-## Architecture
+There is no unit-test suite; `scorer_tout.py` is the regression test that matters.
 
-Three long-running processes talk over plain TCP/HTTP, each independently restartable without losing
-state:
+## The detector — why it works
 
-- **sim.py** — stands in for the real Pi/kit. Streams NDJSON RSSI readings for 6 beacons
-  (`korko-01`..`korko-06`) over TCP, one JSON object per line, plus a per-second clock tick. A small
-  HTTP control page (`/`, `/etat`, `/bouge`) lets you move each beacon between named positions
-  (`ici`/`sable`/`2m`/`loin`/`masque`) defined in `PROFILS` (mean RSSI, noise, drop probability).
+The kit's `Detecteur` base class gives you two methods: `observation(o)` per packet and `tic(t)`
+called on a schedule *even when nothing arrives*. All timing comes from the stream's `t` field,
+never `time.time()` — that is what makes accelerated replay work, and it is a hard rule
+throughout the kit and our code.
 
-- **station.py** — the edge logic, one instance per physical station (A/B/C). Connects to a radio
-  source (real or simulated), smooths RSSI per beacon with an EMA (`ALPHA`), and applies a two-threshold
-  state machine with hysteresis: below `SEUIL_BAS` continuously for `DELAI_DEPART` seconds → DEPART;
-  above `SEUIL_HAUT` continuously for `DELAI_RETOUR` seconds → RETOUR (or ETRANGERE if the beacon
-  belongs to a different station, per the `MAISON` map). Between the two thresholds nothing changes
-  (dead zone). All timing is driven by the `t` field inside incoming messages, never `time.time()` —
-  this keeps it compatible with accelerated replay (`--rejeu`) and doesn't drift with wall-clock hiccups;
-  `avancer_horloge()` only advances the clock from real elapsed time when the radio goes fully silent.
-  Emitted events are appended to a local NDJSON file (`file_station_<nom>.ndjson`) before being pushed
-  to the cloud, so nothing is lost if the cloud or network is down — a background thread retries
-  delivery and only trims the file once the cloud acknowledges a batch. `extraire()` tolerates several
-  incoming message shapes/field names so it can adapt to what a real kit actually sends (see `diag.py`).
+Measured from `korko_sim.py`'s propagation model (`RSSI_1M=-62`, `EXPOSANT=2.6`):
 
-- **cloud.py** — stateful backend and web server (`ThreadingHTTPServer`, no framework). Receives
-  station events at `POST /evenements` (idempotent via the `vus` event-id set), maintains per-beacon
-  location/session state (`planches`), turns DEPART/RETOUR pairs into priced sessions (`sessions`,
-  `PRIX_MINUTE`/`PRIX_MAX`), and "sends" SMS by printing/logging them (`sms_log`). All server state
-  (`stations`, `planches`, `clients`, `sessions`, `alertes`, `sms_log`, `jetons`) is a module-level
-  dict/list guarded by one `RLock`, persisted as a whole to `cloud_etat.json` after every mutation and
-  reloaded on startup unless `--reset` is passed — treat this file as the database. Clock for pricing
-  and timeouts is `maintenant()`, derived from the latest `t` reported by stations, not wall time.
-  Serves three UIs from the same process: `/` (auto-refreshing operator dashboard, server-rendered
-  HTML), `/m` (single-page mobile "arm a board" flow opened via QR code), and `/app` (serves
-  [app.html](app.html), a client-rendered SPA polling the JSON `Api` endpoints under `/api/...`).
+| situation | RSSI | departed? |
+|---|---|---|
+| at the rack (1.5 m) | ≈ -67 | no |
+| face down (`envers`, -5 dB) | ≈ -72 | no |
+| wet body in front (`corps`, -18 dB) | ≈ **-85** | **no** |
+| on the sand (`poser`, ~9 m) | ≈ **-87** | **no** |
+| out at sea (`partir`, 90 m) | **below the -100 floor → no packets at all** | **yes** |
 
-- **chaine.py** / **contracts/KorkoEvents.sol** — the blockchain mirror. `KorkoEvents.sol` is a
-  simple contract restricted to one `operator` address (access control via `onlyOperator`): it
-  records session start/end (`demarrerSession`/`terminerSession`, keyed by cloud.py's plain integer
-  `session["id"]`) and a per-rider on-chain `score` mapping fed by `attribuerPoints` (mirrors the
-  existing `tubes` counter). Riders are identified by `riderId = keccak256(cle_client)` (the same
-  string key cloud.py already uses — a phone number or `"privy:did:..."`) rather than requiring a
-  wallet, since phone-only demo accounts don't have one; `enregistrerWallet` is the seam left for
-  linking a real per-rider smart-account wallet later (true ERC-4337 account abstraction is out of
-  scope here — right now one operator EOA relays and pays gas for every user, by design, not a bug
-  to fix casually). `chaine.py`'s `Chaine` class queues calls and sends them from a background
-  thread with retry, mirroring `station.py`'s persistent-queue pattern, so a slow/unavailable RPC
-  never blocks an HTTP request in `cloud.py`.
+Sand and occlusion sit 2 dB apart, so **no threshold can separate them** — that is precisely
+what makes `station_exemple.py` (a flat `SEUIL = -80`) produce hundreds of false departures.
+The real signature of a departure is **silence**, not weakness.
 
-- **app.html** — the rider-facing SPA served at `/app`. Vanilla JS, polls `/api/stations` and
-  `/api/moi` every 1.5s (`rafraichir()`) and re-renders from scratch (`afficher()`); the auth token
-  (`jeton`) is kept in `localStorage`. Login is either phone+SMS-code (`/api/login/tel` +
-  `/api/login/code` — the demo code is echoed back in the response since there's no real SMS) or
-  Google via Privy (`/api/login/privy`), which creates an embedded Avalanche Fuji wallet client-side;
-  Privy's React bundle is loaded from esm.sh at runtime and is a no-op if the cloud wasn't started
-  with `--privy-app-id`. The demo panel in this same page proxies clicks straight to `sim.py`'s
-  `/bouge` endpoint via `POST /api/sim/bouge` on the cloud (to avoid CORS), so it only works against
-  the simulator, not real hardware.
+So: DEPART = prolonged total silence. That single change fixes `sable`, `corps` and most of
+`journee`. The second half of the rule separates a departure from a flat battery, which also
+goes silent: look at the median of the last packets *before* the silence. Weak → the board was
+being carried away. Strong → the beacon died at the rack; emit a maintenance warning, never a
+DEPART. (`morte` and `mourante` carry **no** ground-truth events at all.)
 
-### Shared conventions worth knowing before editing
+`SILENCE_DEPART = 45 s` is bounded below by the two legitimate silences — a `mourante` beacon
+drops to one packet per 6 s, and `--chaos` blacks out the network for 12 s every 180 s — and
+bounded above by the scorer's 300 s tolerance, which it sits far inside.
 
-- `MAISON` (beacon → home station letter) is duplicated verbatim in `sim.py`, `station.py`, and
-  `cloud.py` — if you add/rename a beacon or station, update all three.
-- Everywhere in this codebase, simulated/logical time (the `t` field) is authoritative, not
-  `time.time()`/`datetime.now()`. Follow this pattern in any new code that touches event timing so
-  replay and accelerated simulation (`sim.py --vitesse`) keep working.
-- Tunable detection parameters live at the top of `station.py` (`SEUIL_HAUT`, `SEUIL_BAS`,
-  `DELAI_DEPART`, `DELAI_RETOUR`, `ALPHA`) — see [DEMARRAGE.md](DEMARRAGE.md) for the one-sentence
-  rule they encode and known calibration values (-56 dBm at the rack, -68 dBm at ~2m).
+Ground-truth timing details that constrain the emitted timestamps: a predicted event matches
+only within `[v.t - 5, v.t + tol]` (tol = 300 for DEPART, 120 otherwise). So DEPART is stamped
+`p.vue` (the last packet heard, ~23 s after the true event) — closer to truth than "now" and
+still safely inside. RETOUR is stamped *now* rather than when the strong signal began, because
+the latter can land more than 5 s *before* ground truth and would score as a false positive.
+
+Only boards belonging to this station can DEPART. A foreign board leaving (`sen_va`) records no
+ground-truth event, so it must emit nothing.
+
+Current result: **312 justes / 0 false / 0 missed** over 7 scenarios × 12 seeds × {normal, chaos}.
+Any change to the detector must be re-scored — `scorer_tout.py` exits non-zero on any error.
+
+## The cloud
+
+`mon_cloud.py` follows the kit's contract: port 9000, `POST /evenements` taking
+**newline-delimited JSON** (not a JSON array), events keyed `evenement` (not `type`), with a
+`TIC` heartbeat that drives the clock and therefore billing. All state is module-level dicts
+under one `RLock`, persisted whole to `mon_cloud_etat.json` after each mutation.
+
+Two non-obvious things that were bugs, found by running it:
+
+- **Console encoding**: both `mon_cloud.py` and `ma_station.py` reconfigure stdout/stderr to
+  UTF-8 with `errors="replace"` at import. Without it, printing `→` or an accent crashes the
+  request thread on a cp1252 Windows console — a log line must never take down the server.
+  (`cloud_exemple.py` has this latent bug too.)
+- **On-chain session ids**: the cloud's session id restarts at 1 after `--reset`, and
+  `KorkoEvents.demarrerSession` rejects an id already recorded. So the chain id is derived —
+  `id_chaine()` hashes client+station+board+t_depart — and stored on the session as `id_chaine`
+  so `terminerSession` reuses it. Never pass the display id to the chain.
+
+## Blockchain layer
+
+`chaine.py` exposes a module-level `chaine` object; `mon_cloud.py` calls `demarrer_session` /
+`terminer_session` / `attribuer_points` / `enregistrer_wallet`. Calls are queued and sent from a
+background thread with retry, so a slow RPC never blocks an HTTP request.
+
+Riders are identified on-chain by `keccak256(cle_client)` — the phone number or `"privy:did:…"`
+string — not by wallet address, because phone-only accounts have no wallet. `enregistrerWallet`
+is the seam for linking a real per-rider smart account later. One operator EOA relays and pays
+gas for everyone: that is a deliberate simplification, not ERC-4337, and not a bug to "fix"
+casually.
+
+If `.env` (needs `OPERATOR_PRIVATE_KEY`) or `contrat.json` is missing, `chaine.actif` is False
+and the cloud runs identically with no chain writes. `contrat.json` holds a deployed address +
+ABI and is committed; **`.env` must never be** — this repo is public.
+
+Setup: `pip install -r requirements.txt`, `python3 generer_compte.py`, fund the printed address
+at https://core.app/tools/testnet-faucet/ (Fuji C-Chain), `python3 deploy_contrat.py`.
+
+## Conventions
+
+- Logical time (`t` from the stream) is authoritative everywhere. Never `time.time()`.
+- Board→station config comes from `korko.STATIONS`; don't redeclare it. Station A owns
+  korko-01/02 only — the simulator plays station A, and B/C boards should normally never be heard.
+- Secrets (`PRIVY_APP_ID`, `PRIVY_APP_SECRET`, `OPERATOR_PRIVATE_KEY`) go through environment
+  variables or `.env`, never command-line arguments — argv is world-readable via `tasklist`/`wmic`.
