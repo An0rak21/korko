@@ -34,6 +34,7 @@ import random
 import secrets
 import sys
 import threading
+import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
@@ -56,6 +57,7 @@ PLAFOND = 600             # s avant le SMS de rappel (3 h en exploitation)
 PERDUE = 3 * PLAFOND      # au-delà : planche réputée perdue
 RESERVATION = 300         # une session armée non partie expire au bout de 5 min
 TUBES_SESSION = 1
+PERIODE_SAUVEGARDE = 30   # s de flux entre deux sauvegardes de routine
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 FICHIER_ETAT = os.path.join(ICI, "mon_cloud_etat.json")
@@ -79,18 +81,43 @@ attente = {}              # station -> [clés clients armés, pas encore partis]
 sms_log = []              # (clé client, texte)
 alertes = []              # (t, texte)
 journal = []              # lignes de texte, la plus récente en tête
+_sauve = {"t": -1e9}      # horloge de la dernière sauvegarde de routine
 
 
 # ------------------------------------------------------------------ état
 
 def sauver():
+    """Écrit l'état sur disque. Ne lève jamais : perdre une sauvegarde est
+    ennuyeux, perdre l'événement qu'on était en train de traiter ne l'est pas
+    moins, et refuser un départ parce qu'un fichier est verrouillé serait absurde.
+
+    Sous Windows, os.replace échoue avec « Accès refusé » quand un antivirus,
+    l'indexeur ou un éditeur ouvre le fichier au même instant. C'est transitoire :
+    on réessaie. Le fichier temporaire porte un nom unique pour que deux
+    sauvegardes rapprochées ne se marchent pas dessus.
+    """
     etat = {"horloge": horloge, "stations": stations, "planches": planches,
             "sessions": sessions, "clients": clients, "jetons": jetons,
             "attente": attente, "sms": sms_log, "alertes": alertes,
             "journal": journal[:200]}
-    with open(FICHIER_ETAT + ".tmp", "w", encoding="utf-8") as f:
-        json.dump(etat, f, ensure_ascii=False)
-    os.replace(FICHIER_ETAT + ".tmp", FICHIER_ETAT)
+    tmp = "%s.%d.tmp" % (FICHIER_ETAT, os.getpid())
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(etat, f, ensure_ascii=False)
+        for essai in range(5):
+            try:
+                os.replace(tmp, FICHIER_ETAT)
+                return
+            except OSError:
+                if essai == 4:
+                    raise
+                time.sleep(0.05 * (essai + 1))
+    except OSError as e:
+        print("  sauvegarde impossible (%s) — l'état reste en mémoire" % e, flush=True)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 def charger():
@@ -324,13 +351,18 @@ def retour(balise, station, t, etrangere):
 
 
 def retards():
-    """Appelée à chaque TIC. Le temps long, c'est le métier du cloud."""
+    """Appelée à chaque TIC. Le temps long, c'est le métier du cloud.
+
+    Renvoie True si quelque chose a changé, pour ne sauvegarder que dans ce cas.
+    """
+    change = False
     for s in sessions:
         if s["etat"] == "armee" and horloge - s["t_arme"] > RESERVATION:
             s["etat"] = "expiree"
             if s["client"] in attente.get(s["station"], []):
                 attente[s["station"]].remove(s["client"])
             sms(s["client"], "Ta réservation a expiré. Réarme quand tu veux.")
+            change = True
         elif s["etat"] == "en_cours":
             duree = horloge - s["t_depart"]
             if duree > PERDUE:
@@ -340,10 +372,13 @@ def retards():
                 sms(s["client"], "%s jamais rendue. Caution débitée : elle est à toi."
                     % s["balise"])
                 alerte("%s réputée perdue" % s["balise"])
+                change = True
             elif duree > PLAFOND and not s["rappel"]:
                 s["rappel"] = True
                 sms(s["client"], "Ta session tourne depuis %s. Raccroche %s en sortant."
                     % (duree_txt(duree), s["balise"]))
+                change = True
+    return change
 
 
 def traiter(ev):
@@ -359,8 +394,13 @@ def traiter(ev):
 
         type_ = ev.get("evenement")
         if type_ == "TIC":
-            retards()
-            sauver()
+            # Une station envoie un TIC par seconde de flux. Réécrire tout l'état
+            # à chaque fois use le disque pour rien et multiplie les collisions
+            # avec l'antivirus : on ne sauvegarde que si quelque chose a bougé,
+            # avec un filet de sécurité périodique.
+            if retards() or horloge - _sauve["t"] >= PERIODE_SAUVEGARDE:
+                _sauve["t"] = horloge
+                sauver()
             return
 
         balise = ev.get("balise")
@@ -516,7 +556,7 @@ class Cloud(BaseHTTPRequestHandler):
                 try:
                     traiter(json.loads(ligne))
                 except Exception as e:                     # noqa: BLE001
-                    note("événement illisible : %s" % e)
+                    note("événement rejeté (%s) : %s" % (e, ligne[:120]))
             return self.repondre("ok")
 
         try:
