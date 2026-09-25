@@ -39,7 +39,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 from korko import STATIONS
-from chaine import chaine
+from chaine import chaine, lire_env
 
 # La console Windows est en cp1252 et ne sait pas écrire « → » ni les accents.
 # Sans ça, un simple print du journal fait tomber le serveur en pleine requête.
@@ -575,12 +575,17 @@ class Cloud(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    # Les secrets se lisent dans l'environnement ou dans .env (jamais commité) :
+    # passés en argument, ils seraient lisibles par n'importe quel autre
+    # processus de la machine (tasklist, wmic, ps).
+    env = lire_env()
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=PORT)
     ap.add_argument("--reset", action="store_true", help="repartir d'un état vide")
-    ap.add_argument("--privy-app-id", default=os.environ.get("PRIVY_APP_ID", ""))
-    ap.add_argument("--privy-secret", default=os.environ.get("PRIVY_APP_SECRET", ""),
-                    help="si fourni, chaque connexion Privy est vérifiée auprès de Privy")
+    ap.add_argument("--privy-app-id", default=env.get("PRIVY_APP_ID", ""))
+    ap.add_argument("--privy-secret", default=env.get("PRIVY_APP_SECRET", ""),
+                    help="mieux : mettre PRIVY_APP_SECRET dans .env plutôt qu'ici")
     ap.add_argument("--sim", default="http://localhost:8080",
                     help="page de contrôle du simulateur")
     a = ap.parse_args()
